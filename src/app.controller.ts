@@ -74,8 +74,8 @@ export class AppController {
     } else if (source.balance < transferDto.amount) {
       throw new ConflictException('you dont have enough coverage');
     } else {
-      source.balance - transferDto.amount;
-      target.balance + transferDto.amount;
+      source.balance -= transferDto.amount;
+      target.balance += transferDto.amount;
       sourceRep.save(source);
       targetRep.save(target);
     }
