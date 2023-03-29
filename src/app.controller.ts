@@ -1,11 +1,15 @@
 import { Delete } from '@nestjs/common';
+import { ConflictException } from '@nestjs/common';
+import { NotFoundException } from '@nestjs/common';
 import { Put } from '@nestjs/common';
 import { Param } from '@nestjs/common';
 import { Body, Controller, Get, Post, Render } from '@nestjs/common';
+import { NotFoundError } from 'rxjs';
 import { DataSource } from 'typeorm';
 import { AppService } from './app.service';
 import AccountDto from './dtos/account.dto';
 import OwnerDto from './dtos/owner.dto';
+import TransferDto from './dtos/transfer.dto';
 import { Account } from './entities/account.entity';
 import { Owner } from './entities/owner.entity';
 
@@ -50,6 +54,31 @@ export class AppController {
     account.accountNumber = accountDto.accountNumber.toString();
     account.balance = accountDto.balance;
     await accountRep.save(account);
+  }
+
+  @Post('transfer/:sourceId/:targetId')
+  async transfer(
+    @Param('sourceId') sourceId: number,
+    @Param('targetId') targetId: number,
+    @Body() transferDto: TransferDto,
+  ) {
+    const sourceRep = this.dataSource.getRepository(Account);
+    const source = await sourceRep.findOneBy({ id: sourceId });
+    const targetRep = this.dataSource.getRepository(Account);
+    const target = await targetRep.findOneBy({ id: targetId });
+
+    if (target == null || source == null) {
+      throw new NotFoundException(
+        'not account found check your bank, owner ids',
+      );
+    } else if (source.balance < transferDto.amount) {
+      throw new ConflictException('you dont have enough coverage');
+    } else {
+      source.balance - transferDto.amount;
+      target.balance + transferDto.amount;
+      sourceRep.save(source);
+      targetRep.save(target);
+    }
   }
 
   @Delete('/owner/:id')
