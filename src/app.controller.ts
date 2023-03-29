@@ -1,4 +1,5 @@
 import { Delete } from '@nestjs/common';
+import { Put } from '@nestjs/common';
 import { Param } from '@nestjs/common';
 import { Body, Controller, Get, Post, Render } from '@nestjs/common';
 import { DataSource } from 'typeorm';
@@ -63,5 +64,30 @@ export class AppController {
     const accountRep = this.dataSource.getRepository(Account);
     const account = await accountRep.findOneBy({ id });
     await accountRep.remove(account);
+  }
+
+  @Put('/owner/:id')
+  async updateOwner(@Param('id') id: number, @Body() ownerDto: OwnerDto) {
+    const ownerRep = this.dataSource.getRepository(Owner);
+    const owner = await ownerRep
+      .createQueryBuilder()
+      .update(Owner)
+      .set({ fullName: ownerDto.fullName, business: ownerDto.business })
+      .where('id = :id', { id })
+      .execute();
+  }
+
+  @Put('/account/:id')
+  async updateAccount(@Param('id') id: number, @Body() accountDto: AccountDto) {
+    const accountRep = this.dataSource.getRepository(Account);
+    const account = await accountRep
+      .createQueryBuilder()
+      .update(Account)
+      .set({
+        accountNumber: accountDto.accountNumber.toString(),
+        balance: accountDto.balance,
+      })
+      .where('id = :id', { id })
+      .execute();
   }
 }
