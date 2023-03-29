@@ -9,5 +9,5 @@ export class Owner {
   fullName: string;
 
   @Column()
-  business: number;
+  business: boolean;
 }
